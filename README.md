@@ -182,48 +182,23 @@ mkdir -p ~/.claude/commands
 cp learn-eval.md ~/.claude/commands/
 ```
 
-### 一键安装脚本
+### 一键安装
 
 ```bash
-#!/bin/bash
-# install.sh - 跨平台安装脚本
+# 克隆仓库
+git clone https://github.com/denki-san/Agent-Continuous-Learning.git
+cd Agent-Continuous-Learning
 
-# 检测当前项目使用的 Agent
-detect_agent() {
-    if [ -d ".cursor" ]; then echo "cursor"
-    elif [ -d ".windsurf" ]; then echo "windsurf"
-    elif [ -f ".zed/tasks.json" ]; then echo "zed"
-    elif [ -d ".claude" ]; then echo "claude-code"
-    else echo "unknown"
-    fi
-}
+# 运行安装脚本（自动检测 Agent 类型）
+bash install.sh
+```
 
-AGENT=$(detect_agent)
-echo "检测到 Agent: $AGENT"
+或指定目标平台：
 
-case $AGENT in
-    claude-code)
-        mkdir -p ~/.claude/commands
-        cp learn-eval.md ~/.claude/commands/
-        echo "✓ 已安装到 Claude Code"
-        ;;
-    cursor)
-        mkdir -p .cursor/commands
-        cp learn-eval.md .cursor/commands/
-        echo "✓ 已安装到 Cursor"
-        ;;
-    windsurf)
-        mkdir -p .windsurf/commands
-        cp learn-eval.md .windsurf/commands/
-        echo "✓ 已安装到 Windsurf"
-        ;;
-    *)
-        echo "未检测到支持的 Agent，手动安装："
-        echo "  Claude Code: cp learn-eval.md ~/.claude/commands/"
-        echo "  Cursor:      cp learn-eval.md .cursor/commands/"
-        echo "  Windsurf:    cp learn-eval.md .windsurf/commands/"
-        ;;
-esac
+```bash
+bash install.sh --claude     # 安装到 Claude Code
+bash install.sh --cursor     # 安装到 Cursor
+bash install.sh --windsurf   # 安装到 Windsurf
 ```
 
 ## 设计理念
