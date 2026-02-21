@@ -66,6 +66,59 @@ Agent-Continuous-Learning/
 6. 展示给用户确认
 7. 保存到确定的位置
 
+## 流程图
+
+```mermaid
+flowchart TD
+    A[调用 /learn-eval] --> B[回顾当前会话]
+    B --> C{发现可提取模式?}
+
+    C -->|否| Z[结束]
+
+    C -->|是| D[识别模式类型]
+    D --> D1[错误解决模式]
+    D --> D2[调试技巧]
+    D --> D3[变通方案]
+    D --> D4[项目特定模式]
+
+    D1 & D2 & D3 & D4 --> E[确定保存位置]
+
+    E --> F{其他项目有用吗?}
+    F -->|是| G[全局存储<br/>~/.claude/skills/learned/]
+    F -->|否| H[项目存储<br/>.claude/skills/learned/]
+
+    G & H --> I[起草技能文件]
+
+    I --> J[质量自评]
+    J --> K{五维评分}
+
+    K --> L[具体性 1-5]
+    K --> M[可操作性 1-5]
+    K --> N[范围适配 1-5]
+    K --> O[非冗余性 1-5]
+    K --> P[覆盖度 1-5]
+
+    L & M & N & O & P --> Q{所有维度 ≥ 3?}
+
+    Q -->|否| R[改进草稿]
+    R --> J
+
+    Q -->|是| S[展示给用户确认]
+    S --> T{用户确认?}
+
+    T -->|否| U[根据反馈修改]
+    U --> J
+
+    T -->|是| V[保存技能文件]
+    V --> W[✓ 学习完成]
+
+    style A fill:#e1f5fe
+    style W fill:#c8e6c9
+    style Z fill:#ffcdd2
+    style Q fill:#fff9c4
+    style T fill:#fff9c4
+```
+
 ## 设计理念
 
 - **不提取琐碎修复** — 拼写错误、简单语法错误不值得保存
