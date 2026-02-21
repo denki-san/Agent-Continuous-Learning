@@ -1,6 +1,7 @@
 # Agent Continuous Learning
 
 从 AI Agent 会话中自动提取、评估和保存可重用模式的系统。
+参考：https://github.com/affaan-m/everything-claude-code/tree/main
 
 ## 概述
 
