@@ -68,55 +68,162 @@ Agent-Continuous-Learning/
 
 ## 流程图
 
-```mermaid
-flowchart TD
-    A[调用 /learn-eval] --> B[回顾当前会话]
-    B --> C{发现可提取模式?}
+```
+调用 /learn-eval
+         ↓
+  回顾会话 → 发现模式? → 识别类型（4种）
+                            ↓
+                确定存储位置（全局/项目）
+                            ↓
+                      起草技能文件
+                            ↓
+                      五维质量评估 ←──┐
+                            ↓          │
+                所有维度 ≥ 3? ─否─ 改进草稿
+                            ↓是
+                      用户确认 ─否─ 修改
+                            ↓是
+                      保存完成 ✓
+```
 
-    C -->|否| Z[结束]
+## 跨平台安装方案
 
-    C -->|是| D[识别模式类型]
-    D --> D1[错误解决模式]
-    D --> D2[调试技巧]
-    D --> D3[变通方案]
-    D --> D4[项目特定模式]
+### 支持的 Coding Agent 平台
 
-    D1 & D2 & D3 & D4 --> E[确定保存位置]
+| 平台 | 类型 | 安装方式 | 自定义命令支持 |
+|------|------|----------|----------------|
+| **Claude Code** | AI 原生 CLI | Plugin + 手动复制 | ✅ `/learn-eval` |
+| **Cursor** | AI 原生 IDE | `.cursorrules` + `.cursor/commands/` | ✅ 支持 |
+| **Windsurf** | AI 原生 IDE | `.windsurfrules` + MCP | ✅ 支持 |
+| **Zed** | AI 编辑器 | `~/.config/zed/tasks.json` | ⚠️ Task 形式 |
+| **VS Code + Copilot** | 插件型 | `.github/copilot-instructions.md` | ❌ 仅 Prompt |
+| **OpenCode** | AI CLI | Plugin 系统 | ✅ 完全兼容 |
 
-    E --> F{其他项目有用吗?}
-    F -->|是| G[全局存储<br/>~/.claude/skills/learned/]
-    F -->|否| H[项目存储<br/>.claude/skills/learned/]
+### 安装方案
 
-    G & H --> I[起草技能文件]
+#### Claude Code
 
-    I --> J[质量自评]
-    J --> K{五维评分}
+```bash
+# 方式 1: 手动安装（推荐）
+mkdir -p ~/.claude/commands
+cp learn-eval.md ~/.claude/commands/
 
-    K --> L[具体性 1-5]
-    K --> M[可操作性 1-5]
-    K --> N[范围适配 1-5]
-    K --> O[非冗余性 1-5]
-    K --> P[覆盖度 1-5]
+# 使用
+/learn-eval
+```
 
-    L & M & N & O & P --> Q{所有维度 ≥ 3?}
+#### Cursor
 
-    Q -->|否| R[改进草稿]
-    R --> J
+```bash
+# 创建 Cursor 配置目录
+mkdir -p .cursor/commands
 
-    Q -->|是| S[展示给用户确认]
-    S --> T{用户确认?}
+# 复制技能文件
+cp learn-eval.md .cursor/commands/learn-eval.md
 
-    T -->|否| U[根据反馈修改]
-    U --> J
+# 创建 .cursorrules（可选，用于全局规则）
+echo "When user types /learn-eval, follow the workflow in .cursor/commands/learn-eval.md" >> .cursorrules
+```
 
-    T -->|是| V[保存技能文件]
-    V --> W[✓ 学习完成]
+#### Windsurf
 
-    style A fill:#e1f5fe
-    style W fill:#c8e6c9
-    style Z fill:#ffcdd2
-    style Q fill:#fff9c4
-    style T fill:#fff9c4
+```bash
+# 创建 .windsurfrules
+cat > .windsurfrules << 'EOF'
+## 自定义命令
+
+### /learn-eval
+从当前会话中提取可重用模式，评估质量后保存为技能。
+详细流程见 `.windsurf/commands/learn-eval.md`
+EOF
+
+# 创建命令目录
+mkdir -p .windsurf/commands
+cp learn-eval.md .windsurf/commands/
+```
+
+#### Zed
+
+```bash
+# 编辑 Zed tasks 配置
+# ~/.config/zed/tasks.json
+{
+  "learn-eval": {
+    "command": "echo '从会话提取模式并评估'",
+    "env": {},
+    "allow_concurrent_runs": false
+  }
+}
+```
+
+#### VS Code + GitHub Copilot
+
+```bash
+# 创建项目级指令文件
+mkdir -p .github
+cat > .github/copilot-instructions.md << 'EOF'
+# 持续学习指令
+
+当用户请求提取模式时，按以下流程执行：
+1. 回顾会话，识别可复用模式
+2. 使用五维评分表评估质量
+3. 确定保存位置（全局 vs 项目）
+4. 起草技能文件并等待用户确认
+
+详细说明见 learn-eval.md
+EOF
+```
+
+#### OpenCode
+
+```bash
+# OpenCode 与 Claude Code 插件兼容
+mkdir -p ~/.claude/commands
+cp learn-eval.md ~/.claude/commands/
+```
+
+### 一键安装脚本
+
+```bash
+#!/bin/bash
+# install.sh - 跨平台安装脚本
+
+# 检测当前项目使用的 Agent
+detect_agent() {
+    if [ -d ".cursor" ]; then echo "cursor"
+    elif [ -d ".windsurf" ]; then echo "windsurf"
+    elif [ -f ".zed/tasks.json" ]; then echo "zed"
+    elif [ -d ".claude" ]; then echo "claude-code"
+    else echo "unknown"
+    fi
+}
+
+AGENT=$(detect_agent)
+echo "检测到 Agent: $AGENT"
+
+case $AGENT in
+    claude-code)
+        mkdir -p ~/.claude/commands
+        cp learn-eval.md ~/.claude/commands/
+        echo "✓ 已安装到 Claude Code"
+        ;;
+    cursor)
+        mkdir -p .cursor/commands
+        cp learn-eval.md .cursor/commands/
+        echo "✓ 已安装到 Cursor"
+        ;;
+    windsurf)
+        mkdir -p .windsurf/commands
+        cp learn-eval.md .windsurf/commands/
+        echo "✓ 已安装到 Windsurf"
+        ;;
+    *)
+        echo "未检测到支持的 Agent，手动安装："
+        echo "  Claude Code: cp learn-eval.md ~/.claude/commands/"
+        echo "  Cursor:      cp learn-eval.md .cursor/commands/"
+        echo "  Windsurf:    cp learn-eval.md .windsurf/commands/"
+        ;;
+esac
 ```
 
 ## 设计理念
